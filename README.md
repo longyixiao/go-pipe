@@ -10,7 +10,7 @@ linux平台和macos平台运用标准net库中ListenUnix完成，在标准库的
 The Dial function connects a client to a named pipe:
 
 
-	conn, err := npipe.Dial(`\\.\pipe\mypipename`)
+	conn, err := pipe.Dial(`\\.\pipe\mypipename`)
 	if err != nil {
 		<handle error>
 	}
@@ -21,7 +21,7 @@ The Dial function connects a client to a named pipe:
 The Listen function creates servers:
 
 
-	ln, err := npipe.Listen(`\\.\pipe\mypipename`)
+	ln, err := pipe.Listen(`\\.\pipe\mypipename`)
 	if err != nil {
 		// handle error
 	}
