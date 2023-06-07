@@ -24,7 +24,7 @@ var (
 	error_io_incomplete syscall.Errno = 0x3e4
 )
 
-//将字符串转成UTF16的指针
+// 将字符串转成UTF16的指针
 func (a PipeAddr) StringToUTF16Ptr() *uint16 {
 	return windows.StringToUTF16Ptr(a.String())
 }
@@ -33,7 +33,7 @@ func (a PipeAddr) UTF16PtrFromString() (*uint16, error) {
 	return windows.UTF16PtrFromString(a.String())
 }
 
-//创建异步io对象
+// 创建异步io对象
 func newOverlapped() (*windows.Overlapped, error) {
 	event, err := windows.CreateEvent(nil, 1, 1, nil)
 	if err != nil {
@@ -42,7 +42,7 @@ func newOverlapped() (*windows.Overlapped, error) {
 	return &windows.Overlapped{HEvent: event}, nil
 }
 
-//创建命名管道
+// 创建命名管道
 func createPipe(address PipeAddr, config *PipeConfig, first bool) (windows.Handle, error) {
 	var sa *windows.SecurityAttributes = nil
 	//是否支持跨权读取
@@ -101,17 +101,15 @@ func createPipe(address PipeAddr, config *PipeConfig, first bool) (windows.Handl
 	return pipe, nil
 }
 
-// pipeListener 是一个命名的管道监听器
-type pipeListener struct {
-	mu sync.Mutex
-
-	addr   PipeAddr
-	handle windows.Handle
-	config PipeConfig
-	closed bool
-
-	acceptHandle     windows.Handle
-	acceptOverlapped *windows.Overlapped
+// 等待异步IO完成
+func waitForCompletion(handle windows.Handle, overlapped *windows.Overlapped) (uint32, error) {
+	_, err := windows.WaitForSingleObject(overlapped.HEvent, windows.INFINITE)
+	if err != nil {
+		return 0, err
+	}
+	var transferred uint32
+	err = windows.GetOverlappedResult(windows.Handle(handle), overlapped, &transferred, true)
+	return transferred, err
 }
 
 func newPipeListener(address PipeAddr, c *PipeConfig) (*pipeListener, error) {
@@ -126,15 +124,17 @@ func newPipeListener(address PipeAddr, c *PipeConfig) (*pipeListener, error) {
 	}, nil
 }
 
-//等待异步IO完成
-func waitForCompletion(handle windows.Handle, overlapped *windows.Overlapped) (uint32, error) {
-	_, err := windows.WaitForSingleObject(overlapped.HEvent, windows.INFINITE)
-	if err != nil {
-		return 0, err
-	}
-	var transferred uint32
-	err = windows.GetOverlappedResult(windows.Handle(handle), overlapped, &transferred, true)
-	return transferred, err
+// pipeListener 是一个命名的管道监听器
+type pipeListener struct {
+	mu sync.Mutex
+
+	addr   PipeAddr
+	handle windows.Handle
+	config PipeConfig
+	closed bool
+
+	acceptHandle     windows.Handle
+	acceptOverlapped *windows.Overlapped
 }
 
 func (l *pipeListener) acceptPipe() (*pipeConn, error) {
@@ -190,8 +190,8 @@ func (l *pipeListener) acceptPipe() (*pipeConn, error) {
 	return &pipeConn{handle: handle, addr: l.addr}, nil
 }
 
-//Accept在net.Listener接口中实现了Accept方法；它
-//等待下一个调用并返回一个通用的net.Conn。
+// Accept在net.Listener接口中实现了Accept方法；它
+// 等待下一个调用并返回一个通用的net.Conn。
 func (l *pipeListener) Accept() (net.Conn, error) {
 	c, err := l.acceptPipe()
 	for err == error_no_data {

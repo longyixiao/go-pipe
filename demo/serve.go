@@ -17,12 +17,15 @@ func init() {
 		pipeFile = "/tmp/mypipe"
 	}
 }
-func ExampleListen() {
+
+func main() {
+	fmt.Println("开始管道监听")
 	ln, err := pipe.Listen(pipe.PipeAddr(pipeFile), nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("pipe.Listen err:", err)
 		return
 	}
+	defer ln.Close()
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -45,11 +48,4 @@ func ExampleListen() {
 			}
 		}(conn)
 	}
-}
-
-func main() {
-	fmt.Println("开始管道监听")
-	go ExampleListen()
-
-	select {}
 }

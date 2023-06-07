@@ -33,7 +33,7 @@ func dial(address PipeAddr, timeout uint32) (*pipeConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &pipeConn{handle: handle, addr: PipeAddr(address)}, nil
+	return &pipeConn{handle: handle, addr: address}, nil
 }
 
 func newPipeConn(address PipeAddr) (*pipeConn, error) {
@@ -51,7 +51,7 @@ func newPipeConn(address PipeAddr) (*pipeConn, error) {
 	}
 }
 
-//PipeConn是命名管道连接的net.Conne接口的实现。
+// PipeConn是命名管道连接的net.Conne接口的实现。
 type pipeConn struct {
 	handle windows.Handle
 	addr   PipeAddr
@@ -65,7 +65,7 @@ type iodata struct {
 	err error
 }
 
-//完成请求
+// 完成请求
 func (c *pipeConn) completeRequest(data iodata, deadline *time.Time, overlapped *windows.Overlapped) (int, error) {
 	if data.err == error_io_incomplete || data.err == syscall.ERROR_IO_PENDING {
 		var timer <-chan time.Time
