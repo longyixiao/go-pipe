@@ -1,7 +1,9 @@
 # go-pipe
 go语言进入程序间通信库
 windows平台借鉴于https://github.com/natefinch/npipe
+
 在该模块的基础上增加了跨权管道通信
+
 linux平台和macos平台运用标准net库中ListenUnix完成，在标准库的基础上新增了跨权管道通信
 
 ### 用法：
